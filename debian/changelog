@@ -1,0 +1,264 @@
+kylin-video (2.1.0-30) v101; urgency=medium
+
+  * bug107882 播放部分音频时，通过mdm屏蔽影音，应用关闭后，还有声音播放.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Tue, 08 Mar 2022 14:22:50 +0800
+
+kylin-video (2.1.0-29) v101; urgency=medium
+
+  * fix bug59163(reopen) 【S】【麒麟影音】视频编码格式为mpeg2video（音频编码格式为aac）的视频，不支持codec硬解码（Intel IPS Bug id——00620223） 
+  * 当视频编码格式为mpeg2video,加入mpv‘--hwdec-codecs=mpeg2video’启动参数,修改判断方式,使用FFmpeg获取视频codec信息.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Fri, 11 Feb 2022 17:15:22 +0800
+
+kylin-video (2.1.0-28) v101; urgency=medium
+
+  * fix bug59163 【S】【麒麟影音】视频编码格式为mpeg2video（音频编码格式为aac）的视频，不支持codec硬解码（Intel IPS Bug id——00620223） 
+  * 当视频编码格式为mpeg2video,加入mpv‘--hwdec-codecs=mpeg2video’启动参数
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Wed, 12 Jan 2022 14:24:51 +0800
+
+kylin-video (2.1.0-27) v101; urgency=medium
+
+  * 在2.1.0-26 基础上追加改动，解决的是同一个问题
+  * fix bug62808 【麒麟影音】音频/视频在播放过程中暂停或正常播放结束后，均无法自动进入锁屏和睡眠
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Sat, 03 Jul 2021 15:48:07 +0800
+
+kylin-video (2.1.0-26) v101; urgency=medium
+
+  * 在2.1.0-25 基础上追加改动，解决的是同一个问题
+  * fix bug62808 【麒麟影音】音频/视频在播放过程中暂停或正常播放结束后，均无法自动进入锁屏和睡眠
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Fri, 02 Jul 2021 11:34:08 +0800
+
+kylin-video (2.1.0-25) v101; urgency=medium
+
+  * fix bug62808 【麒麟影音】音频/视频在播放过程中暂停或正常播放结束后，均无法自动进入锁屏和睡眠
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Fri, 02 Jul 2021 10:03:12 +0800
+
+kylin-video (2.1.0-24) v101; urgency=medium
+
+  * 修复bug57057，播放本地音频时闲置会进入s2idle.
+
+ -- zhaoyubiao <zhaoyubiao@klyinos.cn>  Fri, 18 Jun 2021 11:24:35 +0800
+
+kylin-video (2.1.0-23) v101; urgency=medium
+
+  * 王桂喜add: 隐藏sogou输入法.
+  * 平板模式适配引入了显示问题，撤销 2.1.0-20 2.1.0-22 的修改,保留2.1.0-21修改.
+  * 注：2.1.0-22 修改了control文件，撤销了libgsettings-qt-dev依赖.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Thu, 27 May 2021 15:37:04 +0800
+
+kylin-video (2.1.0-22) v101; urgency=medium
+
+  * 解决gsettings编译报错. 
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Tue, 25 May 2021 19:21:12 +0800
+
+kylin-video (2.1.0-21) v101; urgency=medium
+
+  * 撤销Cpu core online/offline 操作.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Tue, 25 May 2021 17:30:09 +0800
+
+kylin-video (2.1.0-20) v101; urgency=medium
+
+  * 平板模式下隐藏右上角三联按钮、隐藏全屏按钮、取消双击全屏事件、取消Esc退出全屏.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Sat, 22 May 2021 15:00:58 +0800
+
+kylin-video (2.1.0-19) v101; urgency=medium
+
+  * 修复标题栏绘制异常，可以解决以下问题：
+  * 平板模式下旋转麒麟影音窗口，标题栏出现花屏
+  * 拖拽缩放麒麟影音窗口，标题栏出现花屏
+  * 标题栏文字重叠
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Wed, 19 May 2021 11:18:24 +0800
+
+kylin-video (2.1.0-18) v101; urgency=medium
+
+  * 取消timeslider sendDelayedPos 绑定的timer，节省功耗.
+  * 加入cpu core的online/offline dbus 接收接口，关闭混成时offline，打开混成时online，节省功耗.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Tue, 18 May 2021 14:09:35 +0800
+
+kylin-video (2.1.0-17) v101; urgency=medium
+
+  * fix：BUG42885麒麟影音设置界面中F8和F10快捷键的解释错误，F8与F10的解释是颠倒的
+
+ -- hanteng <hanteng@kylinos.cn>  Thu, 10 May 2021 10:25:35 +0800
+
+kylin-video (2.1.0-16) v101; urgency=medium
+
+  * fix：BUG40532 用麒麟影音播放本地音视频文件时，在播放过程中按下F5静音键，退出麒麟影音后再次按下F5，然后再用麒麟影音播放任一音视频，均无声音输出（出现4次/测试5次）。取消静音受键盘静音键控制功能
+
+ -- wangguixi <wangguixi@kylinos.cn>  Thu, 06 May 2021 09:01:35 +0800
+
+kylin-video (2.1.0-15) v101; urgency=medium
+
+  * 取消适配主题框架，取消窗管适配，修复功耗、视频撕裂问题.
+  * Cancel adaption theme frame, cancel window tube adaption, and fix power consumption and video tearing problems.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Sat, 24 Apr 2021 01:36:05 +0800
+
+kylin-video (2.1.0-14) v101; urgency=medium
+
+  * fix:BUG47759 麒麟影音设置界面左侧“Video”名称默认显示为中文“视频”，播放列表中的“Clear”名称默认显示为中文“清除”
+
+ -- hanteng <hanteng@kylinos.cn>  Tue, 12 Apr 2021 15:48:45 +0800
+
+kylin-video (2.1.0-13) v101; urgency=medium
+
+  * 修改弹窗文案
+
+ -- hanteng <hanteng@kylinos.cn>  Tue, 02 Mar 2021 15:48:45 +0800
+
+kylin-video (2.1.0-12) v101; urgency=medium
+
+  * 删除帮助功能
+
+ -- hanteng <hanteng@kylinos.cn>  Tue, 02 Mar 2021 15:48:45 +0800
+
+kylin-video (2.1.0-11) v101; urgency=medium
+
+  * Fix bug30710 修改麒麟影音默认音量
+
+ -- zhaoyubiao <jiaodian@kylinos.cn>  Tue, 02 Mar 2021 15:48:45 +0800
+
+kylin-video (2.1.0-10) v101; urgency=medium
+
+  * Fix bug38050 全屏模式下进入“设置”界面，会自动退出全屏模式
+  * Fix bug38050 When entering the "Settings" interface in full-screen mode, it will automatically exit the full-screen mode.
+  * Fix bug25942 视频播放过程中截图自动保存的文件夹名称默认为英文.
+  * Fix bug25942 The folder name that automatically saves screenshots during video playback is English by default.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Tue, 02 Mar 2021 15:48:45 +0800
+
+kylin-video (2.1.0-9) v101; urgency=medium
+
+  * Fix bug34349 清除麒麟影音列表中的视频、音频文件后即使在麒麟视频中添加了一些新的视频或音频，点击播放后仍可播放已删除的音频或视频.
+  * Fix bug34349 Even if you add some new videos or audio to the Kirin video,you can still play the deleted audio or video after clicking Play.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Mon, 01 Mar 2021 17:39:13 +0800
+
+kylin-video (2.1.0-8) v101; urgency=medium
+  * Fix bug.
+  * bug27882 视频播放期间播放新视频，预览界面上方视频名称重叠显示.
+  * bug30735 平板模式下麒麟影音视频播放过程中，切换至book模式-帐篷模式-站立模式，各模式间切换，界面上方会出现部分花屏现象.
+  * bug31562 全屏模式下进入“设置”界面或全屏模式下视频播放过程中查看“媒体信息”，会自动退出全屏模式.
+  * BUG27882 New video is played during the video playing, and the video name is overlapped at the top of the preview interface.
+  * BUG30735 Video playing in tablet mode, switch to Book mode, Tent mode and Standing mode. When switching between different modes, some flower screen phenomenon will appear at the top of the interface.
+  * BUG31562 Entering the "Settings" interface in full-screen mode or viewing the "Media Information" during video playing in full-screen mode will automatically exit the full-screen mode.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Fri, 29 Jan 2021 21:31:51 +0800
+
+kylin-video (2.1.0-7) v101; urgency=medium
+
+  * 增加系统热键控制上一首、下一首、暂停/播放
+  * Add d-bus control prev、next、pause/play.
+  * 修复控制面板设置麒麟影音为默认视频播放器之后部分格式视频仍不能默认使用麒麟影音打开
+  * Fix ukui-control-center set kylin-video default app,some video format not default use kylin-video open.
+  * 增加F1调出用户手册快捷键.
+  * Add Key_F1 show help_Guide shortcuts.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Fri, 18 Dec 2020 13:51:17 +0800
+
+kylin-video (2.1.0-6) v101; urgency=medium
+
+  * 取消双击窗口顶部的窗口最大/最小化功能.
+  * Cancel double click on the top of the window Maximum/minimum functionality.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Thu, 03 Dec 2020 14:00:27 +0800
+
+kylin-video (2.1.0-5) v101; urgency=medium
+
+  * 取消窗口圆角，节省功耗.
+  * Eliminating window corners saves power.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Wed, 02 Dec 2020 16:43:43 +0800
+
+kylin-video (2.1.0-4) v101; urgency=medium
+
+  * 增加F8 F9 F10 快捷键.
+  * kylin-add-shortcuts-F8-F9-F10. 
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Sun, 22 Nov 2020 15:49:19 +0800
+
+kylin-video (2.1.0-3) v101; urgency=medium
+
+  * Update version num.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Wed, 18 Nov 2020 13:39:48 +0800
+
+kylin-video (2.1.0-2) v101; urgency=medium
+
+  * Rebuild form V10.1. 
+  * 从V10.1处获取修改，重编.
+  * 解决bug25251 平板模式下麒麟影音会自动关闭，bug#25251.
+  * 修改硬解配置为vaapi.
+
+ -- zhaoyubiao <zhaoyubiao@kylinos.cn>  Wed, 18 Nov 2020 12:03:47 +0800
+
+kylin-video (2.1.0-1) unstable; urgency=medium
+
+  * New upstream bugfix release:
+    - Fix the bug can't be previewed.
+    - Enable hardware acceleration on x86 platform(vdpau).
+    - Fix the bug that video flickering when using the shortcut key to
+      control video (example: rewind and forward).
+    - Fix the bug that some UI controls will display in the process of
+      video buffering.
+    - Fix the bug that can't get the playback status when using MPV.
+    - Fix the bug that can't get the list of video and audio drivers
+      supported by MPV.
+    - Fix no sound when playing with MPV.
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Thu, 26 Mar 2020 21:43:31 +0800
+
+kylin-video (2.0.5-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Tue, 25 Feb 2020 15:54:28 +0800
+
+kylin-video (2.0.1-1) unstable; urgency=medium
+
+  * Remove the useless code.
+  * Debian/control:
+    - Move libcrystalhd3 | firmware-crystalhd from depends to suggests.
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Mon, 23 Sep 2019 19:17:20 +0800
+
+kylin-video (2.0.0-1) unstable; urgency=medium
+
+  * Supported Interface Size Tension.
+  * Added new files, such as videowindow.cpp, autohidecursorwidget.cpp
+    and displaylayercomposer.cpp.
+  * Add remote controller dbus.
+  * Add equalizer and filter for audio.
+  * Fixed the exception of the esctip.
+  * Access icon from theme.
+  * Modified the path of translated pm files and the timing of
+    generation.
+  * Updated these modules: preferences, core, mplayerprocess and
+    mpvprocess.
+  * Rewrote playlist with model and delegate.
+  * Added OSD info.
+  * Optimized partial parameters for mpv and mplayer.
+  * Debian/control:
+    - Add qtbase5-private-dev and libcrystalhd-dev to build-depends.
+    - Add libcrystalhd3 | firmware-crystalhd to depends.
+    - Bump standards vertion to 4.4.0.
+    - Bump compat level to 12.
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Mon, 12 Aug 2019 15:10:39 +0800
+
+kylin-video (1.1.7-1) unstable; urgency=low
+
+  * Initial release. (Closes: #904002)
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Tue, 17 Jul 2018 15:52:31 +0800

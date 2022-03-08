@@ -1,0 +1,50 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ kylin-video (2.1.0-2) v101; urgency=medium
+ .
+   * Rebuild form V10.1.
+   * 从V10.1处获取修改，重编.
+   * 解决bug25251 平板模式下麒麟影音会自动关闭，bug#25251.
+   * 修改硬解配置为vaapi.
+Author: zhaoyubiao <zhaoyubiao@kylinos.cn>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-11-18
+
+--- kylin-video-2.1.0.orig/src/smplayer/preferences.cpp
++++ kylin-video-2.1.0/src/smplayer/preferences.cpp
+@@ -183,7 +183,8 @@ void Preferences::reset() {
+         vo = "vdpau";
+     }
+     else {
+-        vo = "xv";
++        //vo = "xv";
++        vo = "vaapi";
+     }
+     //ao = "pulse";//ao = "";
+ 
+@@ -324,7 +325,8 @@ void Preferences::reset() {
+ //#endif
+ 
+     threads = 4;//1
+-    hwdec = "no";//"auto"
++    //hwdec = "no";//"auto"
++    hwdec = "vaapi";//"auto"
+     //hwdec = "rkmpp-copy";
+ 
+     cache_auto = true;

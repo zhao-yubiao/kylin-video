@@ -1,0 +1,66 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ kylin-video (2.1.0-5) v101; urgency=medium
+ .
+   * 取消窗口圆角，节省功耗.
+   * Eliminating window corners saves power.
+Author: zhaoyubiao <zhaoyubiao@kylinos.cn>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-12-02
+
+--- kylin-video-2.1.0.orig/src/mainwindow.cpp
++++ kylin-video-2.1.0/src/mainwindow.cpp
+@@ -386,7 +386,7 @@ void MainWindow::createPanel()
+ //    //给主界面设置6px的圆角
+ ////    this->setStyleSheet("QMainWindow{background-color: transparent;}");
+ //    this->setStyleSheet("QWidget{border:none; border-radius:6px;}");
+-    this->centralWidget()->setStyleSheet("QWidget{border:none; border-radius:6px; background: #000000;}");//background:rgba(0,0,0,0.9);
++//    this->centralWidget()->setStyleSheet("QWidget{border:none; border-radius:6px; background: #000000;}");//background:rgba(0,0,0,0.9);
+ //    //border:1px solid rgba(255,255,255,0.05);
+ 
+ 
+--- kylin-video-2.1.0.orig/src/systembutton.cpp
++++ kylin-video-2.1.0/src/systembutton.cpp
+@@ -102,11 +102,26 @@ void SystemButton::paintEvent(QPaintEven
+     }
+     if (status != NORMAL) {
+         //painter.fillRect(this->rect(), QColor("#3253bc"));
++        QRect r(m_alignOff, m_alignOff, this->rect().width() - m_alignOff*2, this->rect().height() - m_alignOff*2);
++        painter.drawPixmap(r, pixmap.copy(0, 0, btn_width, btn_height));
+         QPainterPath path;
++
+         path.addRoundedRect(QRectF(rect()), 2, 2);
+         painter.setOpacity(0.1);
+         painter.fillPath(path, QColor("#2bb6ea"));
+     }
++    else {
++        painter.setCompositionMode(QPainter::CompositionMode_Clear);
++        QPainterPath path;
++
++        path.addRoundedRect(QRectF(rect()), 2, 2);
++        painter.setOpacity(0.1);
++        painter.fillPath(path, QColor("#000000"));
++        painter.setOpacity(1);
++        painter.setCompositionMode(QPainter::CompositionMode_Source);
++        QRect r(m_alignOff, m_alignOff, this->rect().width() - m_alignOff*2, this->rect().height() - m_alignOff*2);
++        painter.drawPixmap(r, pixmap.copy(0, 0, btn_width, btn_height));
++    }
+ 
+     painter.end();
+ }

@@ -1,0 +1,115 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ kylin-video (2.1.0-9) v101; urgency=medium
+ .
+   * Fix bug34349 清除麒麟影音列表中的视频、音频文件后即使在麒麟视频中添加了一些新的视频或音频，点击播放后仍可播放已删除的音频或视频.
+   * Fix bug34349 Even if you add some new videos or audio to the Kirin video,you can still play the deleted audio or video after clicking Play.
+Author: zhaoyubiao <zhaoyubiao@kylinos.cn>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2021-03-01
+
+--- kylin-video-2.1.0.orig/src/playlist.cpp
++++ kylin-video-2.1.0/src/playlist.cpp
+@@ -1347,6 +1347,46 @@ void Playlist::addDirectory(QString dir)
+     setModified(true);
+ }
+ 
++void Playlist::playAfterDelItem()
++{
++//    emit this->requestSetPlayingTitle("");
++//    qDebug("Playlist::playNext  pl[m_currentItemIndex]->name()=%s", pl[m_currentItemIndex]->name());
++    //qDebug() << "playNext m_currentItemIndex=" << m_currentItemIndex;
++    if (pref->play_order == Preferences::RandomPlay) {//随机播放
++        int chosen_item = chooseRandomItem();
++        if (chosen_item == -1) {
++            clearPlayedTag();
++            chosen_item = chooseRandomItem();
++            if (chosen_item == -1) chosen_item = 0;
++        }
++        playItem(chosen_item);
++    }
++    else if (pref->play_order == Preferences::ListLoopPlay) {//列表循环
++        bool finished_list = (m_currentItemIndex + 1 >= this->m_playlistView->getModelRowCount());//pl.count()
++        if (finished_list) {
++            clearPlayedTag();
++        }
++        if (finished_list) {
++            playItem(0);
++        }
++        else {
++            playItem(m_currentItemIndex);
++        }
++    }
++    else {//顺序播放
++        bool finished_list = (m_currentItemIndex + 1 >= this->m_playlistView->getModelRowCount());//pl.count()
++        if (finished_list) {
++            clearPlayedTag();
++        }
++        if (finished_list) {
++//            emit this->finish_list();
++            emit this->showMessage(tr("Reached the end of the playlist"));
++        }
++        else {
++            playItem(m_currentItemIndex);
++        }
++    }
++}
+ void Playlist::onPlayListItemDeleteBtnClicked(const QStringList &filepathlist)
+ {
+     if (!filepathlist.isEmpty()) {
+@@ -1424,17 +1464,19 @@ void Playlist::onPlayListItemDeleteBtnCl
+                     if (!this->rowIsEmpty()) {//if (m_playlistView->getModelRowCount() > 0) {
+                         noVideoFrame->hide();
+                         this->m_playlistView->show();
+-                        QString state = m_core->stateToString().toUtf8().data();
+-                        if (state == "Playing" || state == "Paused") {
+-                            //当视频正在播放或者暂停时，继续保持该视频对应的播放列表项处于被选中的状态
+-                            if (playingFile.isEmpty()) {
+-                                this->setPlaying("", 0);//this->playNext();
+-                            }
+-                            else {
+-                                this->setPlaying(playingFile, this->m_currentItemIndex);
+-                            }
+-                        }
++//                        QString state = m_core->stateToString().toUtf8().data();
++//                        if (state == "Playing" || state == "Paused") {
++//                            //当视频正在播放或者暂停时，继续保持该视频对应的播放列表项处于被选中的状态
++//                            if (playingFile.isEmpty()) {
++//                                this->setPlaying("", 0);//this->playNext();
++//                            }
++//                            else {
++//                                this->setPlaying(playingFile, this->m_currentItemIndex);
++//                            }
++//                        }
+                         emit this->update_playlist_count(pref->m_videoMap.count());
++                        this->playAfterDelItem();
++                        m_core->stop();
+                     }
+                     else {
+                         this->setPlaying("", 0);
+--- kylin-video-2.1.0.orig/src/playlist.h
++++ kylin-video-2.1.0/src/playlist.h
+@@ -112,6 +112,7 @@ public slots:
+ 
+ 	virtual void playNext();
+     virtual void playPrev();
++    virtual void playAfterDelItem();
+ 
+     void playNextAuto(); // Called from GUI when a file finished
+ 

@@ -1,0 +1,221 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ kylin-video (2.1.0-7) v101; urgency=medium
+ .
+   * 增加系统热键控制上一首、下一首、暂停/播放
+   * Add d-bus control prev、next、pause/play.
+   * 修复控制面板设置麒麟影音为默认视频播放器之后部分格式视频仍不能默认使用麒麟影音打开
+   * Fix ukui-control-center set kylin-video default app,some video format not default use kylin-video open.
+   * 增加F1调出用户手册快捷键.
+   * Add Key_F1 show help_Guide shortcuts.
+Author: zyb <zyb@zyb-virtual-machine>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-12-18
+
+--- kylin-video-2.1.0.orig/kylin-video.desktop
++++ kylin-video-2.1.0/kylin-video.desktop
+@@ -7,7 +7,7 @@ GenericName=Kylin Video
+ GenericName[zh_CN]=麒麟影音
+ Exec=kylin-video %U
+ Icon=kylin-video
+-MimeType=audio/ac3;audio/mp4;audio/mpeg;audio/vnd.rn-realaudio;audio/vorbis;audio/x-adpcm;audio/x-matroska;audio/x-mp2;audio/x-mp3;audio/x-ms-wma;audio/x-vorbis;audio/x-wav;audio/mpegurl;audio/x-mpegurl;audio/x-pn-realaudio;audio/x-scpls;audio/aac;audio/flac;audio/ogg;video/avi;video/mp4;video/flv;video/mpeg;video/quicktime;video/vnd.rn-realvideo;video/x-matroska;video/x-ms-asf;video/x-msvideo;video/x-ms-wmv;video/x-ogm;video/x-theora;video/webm;
++MimeType=audio/ac3;audio/mp4;audio/mpeg;audio/vnd.rn-realaudio;audio/vorbis;audio/x-adpcm;audio/x-matroska;audio/x-mp2;audio/x-mp3;audio/x-ms-wma;audio/x-vorbis;audio/x-wav;audio/mpegurl;audio/x-mpegurl;audio/x-pn-realaudio;audio/x-scpls;audio/aac;audio/flac;audio/ogg;audio/amr(*);audio/x-aiff(*);audio/basic(*);audio/midi(*);audio/amr-wb;audio/x-realaudio;audio/3gpp;audio/x-pn-realaudio-plugin;audio/x-gsm;audio/x-ms-wax;audio/prs.sid;audio/x-musepack(*);audio/x-ape(*);audio/x-m4a(*);audio/x-mod(*);audio/x-s3m(*);audio/x-flac;audio/x-vorbis+ogg;audio/x-wavpack;audio/mp2;audio/x-ms-asx;audio/x-tta;audio/x-mpeg;audio/m4a;audio/mp1;audio/mp3;audio/mpg;audio/scpls;audio/wav;audio/webm;audio/x-aac;audio/x-it;audio/x-mp1;audio/x-mpg;audio/x-ms-asf;audio/x-pn-au;audio/x-pn-wav;audio/x-shorten;audio/x-speex;audio/x-xm;audio/3gpp2;audio/dv;audio/eac3;audio/opus;audio/x-pn-aiff;audio/x-pn-windows-acm;audio/x-real-audio;audio/vnd.dolby.heaac.1;audio/vnd.dolby.heaac.2;audio/vnd.dts;audio/vnd.dts.hd;audio/x-m4b;audio/x-stm;audio/m3u;audio/rn-mpeg;audio/vnd.dolby.mlp;audio/x-pls;audio/x-pn-windows-pcm;audio/x-sbc;audio/x-voc;audio/aiff;audio/mpeg2;audio/mpeg3;audio/musepack;audio/x-flac+ogg;audio/x-m3u;audio/x-oggflac;audio/x-opus+ogg;video/avi;video/mp4;video/flv;video/mpeg;video/quicktime;video/vnd.rn-realvideo;video/x-matroska;video/x-ms-asf;video/x-msvideo;video/x-ms-wmv;video/x-ogm;video/x-theora;video/webm;video/x-flv(*);video/ogg(*);video/3gpp(*);video/x-mng(*);video/mp2t;video/dv;video/mp4v-es;video/x-ms-wmx;video/vnd.mpegurl;video/fli;video/x-ms-wm;video/x-ms-wvx;video/vnd.vivo;video/x-fli(*);video/x-flc(*);video/x-m4v(*);video/3gpp2(*);video/x-ogm+ogg;video/x-avi;video/msvideo;video/x-theora+ogg;video/x-flic;video/x-mpeg;video/x-mpeg2;video/x-nsv;video/x-anim;video/3gp;video/divx;video/vnd.divx;video/x-ms-asx;video/mpeg-system;video/x-ms-afs;video/x-ms-asf-plugin;video/x-ms-wvxvideo;video/vivo;video/x-mpeg-system;video/x-totem-stream;video/mediaplayer;video/mkv;video/x-mjpeg;video/x-mpeg3;video/x-ms-wmp;
+ Type=Application
+ Categories=Qt;KDE;AudioVideo;Player;Video;
+ Keywords=movie;player;media;kde;qt;
+--- kylin-video-2.1.0.orig/src/mainwindow.cpp
++++ kylin-video-2.1.0/src/mainwindow.cpp
+@@ -52,6 +52,8 @@
+ #include <QEvent>
+ #include <QKeyEvent>
+ #include <QBitmap>
++#include<unistd.h>
++
+ 
+ #include "playlist.h"
+ #include "titlewidget.h"
+@@ -246,6 +248,14 @@ MainWindow::MainWindow(QString arch_type
+             }
+         }
+     });
++
++    QDBusConnection::sessionBus().unregisterService("org.mpris.MediaPlayer2.KylinVideo");
++    QDBusConnection::sessionBus().registerService("org.mpris.MediaPlayer2.KylinVideo");
++    QDBusConnection::sessionBus().registerObject("/org/mpris/MediaPlayer2", this, QDBusConnection :: ExportAllSlots | QDBusConnection :: ExportAllSignals);
++    QDBusConnection::sessionBus().registerObject("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", this, QDBusConnection :: ExportAllSlots | QDBusConnection :: ExportAllSignals);
++    QDBusConnection::sessionBus().connect(QString(), QString("/org/mpris/MediaPlayer2"), "org.mpris.MediaPlayer2.Player", "Next", this, NULL);
++    QDBusConnection::sessionBus().connect(QString(), QString("/org/mpris/MediaPlayer2"), "org.mpris.MediaPlayer2.Player", "PlayPause", this, NULL);
++    QDBusConnection::sessionBus().connect(QString(), QString("/org/mpris/MediaPlayer2"), "org.mpris.MediaPlayer2.Player", "Previous", this, NULL);
+ }
+ 
+ MainWindow::~MainWindow()
+@@ -741,9 +751,13 @@ void MainWindow::createOpenActionsAndMen
+     connect(openURLAct, SIGNAL(triggered()), this, SLOT(openURL()) );
+     openURLAct->change(tr("&URL..."));
+ 
++    openGuide = new MyAction(Qt::Key_F1, this, "open_guide" );
++    connect(openGuide, SIGNAL(triggered()), this, SLOT(showGuide()) );
++
+     openMenu->addAction(openFileAct);
+     openMenu->addAction(openDirectoryAct);
+     openMenu->addAction(openURLAct);
++    openMenu->addAction(openGuide);
+ }
+ 
+ void MainWindow::createRecentsActionsAndMenus()
+@@ -2557,6 +2571,51 @@ void MainWindow::openURL()
+     }
+ }
+ 
++#define KYLIN_USER_GUIDE_PATH "/"
++#define KYLIN_USER_GUIDE_SERVICE QString("com.kylinUserGuide.hotel_%1").arg(getuid())
++#define KYLIN_USER_GUIDE_INTERFACE "com.guide.hotel"
++
++bool MainWindow::userGuideDaemonRunning()
++{
++    QDBusConnection conn = QDBusConnection::sessionBus();
++
++    if (!conn.isConnected())
++        return false;
++
++    QDBusReply<QString> reply = conn.interface()->call("GetNameOwner", KYLIN_USER_GUIDE_SERVICE);
++
++    return reply != "";
++}
++
++void MainWindow::showGuide(/*const QString &appName*/)
++{
++    auto s = KYLIN_USER_GUIDE_SERVICE;
++    qDebug()<<s;
++    if (!userGuideDaemonRunning()) {
++        QUrl url = QUrl("help:ubuntu-kylin-help/kylin-video", QUrl::TolerantMode);
++        QDesktopServices::openUrl(url);
++        return;
++    }
++
++    bool bRet  = false;
++
++    QDBusMessage m = QDBusMessage::createMethodCall(KYLIN_USER_GUIDE_SERVICE,
++                     KYLIN_USER_GUIDE_PATH,
++                     KYLIN_USER_GUIDE_INTERFACE,
++                     "showGuide");
++    m << "kylin-video";
++
++    QDBusMessage response = QDBusConnection::sessionBus().call(m);
++    if (response.type()== QDBusMessage::ReplyMessage)
++    {
++        //bRet = response.arguments().at(0).toBool();
++    }
++    else {
++        QUrl url = QUrl("help:ubuntu-kylin-help/files", QUrl::TolerantMode);
++        QDesktopServices::openUrl(url);
++    }
++}
++
+ void MainWindow::loadSub()
+ {
+ 	exitFullscreenIfNeeded();
+@@ -3685,3 +3744,32 @@ void MainWindow::setBackgroudPixmap(QStr
+ 
+     }
+ }
++
++//zyb add for d-bus
++bool MainWindow::CanGoNext() const
++{
++    return true;
++}
++bool MainWindow::CanPlay() const {
++        return true;
++}
++bool MainWindow::CanPause() const {
++        return true;
++}
++bool MainWindow::CanGoPrevious() const {
++        return true;
++}
++void MainWindow::Next() const {
++        qDebug("MainWindow::Next");
++    m_playlistWidget->playNext();
++}
++void MainWindow::Previous() const {
++        qDebug("MainWindow::Previous");
++    m_playlistWidget->playPrev();
++}
++void MainWindow::PlayPause() const {
++    qDebug("MainWindow::PlayPause");
++   m_core->playOrPause();
++}
++
++//end
+--- kylin-video-2.1.0.orig/src/mainwindow.h
++++ kylin-video-2.1.0/src/mainwindow.h
+@@ -73,6 +73,7 @@ enum Direction {
+ class MainWindow : public QMainWindow
+ {
+     Q_OBJECT
++    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2.Player")//zyb add for d-bus shortcut
+     
+ public:
+     MainWindow(QString arch_type = "", QString snap = "", /*ControllerWorker *controller = NULL, */QWidget *parent = 0, Qt::WindowFlags flags = 0);
+@@ -120,6 +121,13 @@ public:
+     void bindThreadWorker(InfoWorker *worker);
+     Core * getCore() { return m_core; };
+ 
++    //zyb add for d-bus
++    bool CanGoNext() const;
++    bool CanPlay() const;
++    bool CanPause() const;
++    bool CanGoPrevious() const;
++    //zyb add end
++
+ public slots:
+     void changeStayOnTop(int);
+     void checkStayOnTop(Core::State);
+@@ -207,6 +215,12 @@ public slots:
+     void saveActions();
+     void moveWindow();
+ 
++    //zyb add for d-bus shortcut
++    void Next() const;
++    void PlayPause() const;
++    void Previous() const;
++    //zyb add end
++
+ 	// Single instance stuff
+ #ifdef SINGLE_INSTANCE
+ 	void handleMessageFromOtherInstances(const QString& message);
+@@ -223,6 +237,9 @@ public slots:
+     void onPausePreview();
+ #endif
+ 
++    void showGuide(/*const QString &appName*/);
++    bool userGuideDaemonRunning();
++
+ signals:
+     void requestActionsEnabled(bool);
+     void requestPlayOrPauseEnabled(bool);
+@@ -306,6 +323,7 @@ private:
+     MyAction *openURLAct = nullptr;//打开URL
+     MyAction *clearRecentsAct = nullptr;//清空最近的文件
+     QMenu *recentfiles_menu = nullptr;//打开最近的文件
++    MyAction *openGuide = nullptr;//打开用户手册
+ 
+     QMenu *playMenu = nullptr;//播放控制
+     QMenu * control_menu = nullptr;

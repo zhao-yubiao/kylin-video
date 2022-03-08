@@ -1,0 +1,1147 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ kylin-video (2.1.0-8) v101; urgency=medium
+ .
+   * Fix bug.
+   * bug27882 视频播放期间播放新视频，预览界面上方视频名称重叠显示.
+   * bug30735 平板模式下麒麟影音视频播放过程中，切换至book模式-帐篷模式-站立模式，各模式间切换，界面上方会出现部分花屏现象.
+   * bug31562 全屏模式下进入“设置”界面或全屏模式下视频播放过程中查看“媒体信息”，会自动退出全屏模式.
+   * BUG27882 New video is played during the video playing, and the video name is overlapped at the top of the preview interface.
+   * BUG30735 Video playing in tablet mode, switch to Book mode, Tent mode and Standing mode. When switching between different modes, some flower screen phenomenon will appear at the top of the interface.
+   * BUG31562 Entering the "Settings" interface in full-screen mode or viewing the "Media Information" during video playing in full-screen mode will automatically exit the full-screen mode.
+Author: zhaoyubiao <zhaoyubiao@kylinos.cn>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2021-01-29
+
+--- kylin-video-2.1.0.orig/src/mainwindow.cpp
++++ kylin-video-2.1.0/src/mainwindow.cpp
+@@ -108,8 +108,12 @@
+ #include "smplayer/videopreview.h"
+ #endif
+ 
++// lc add 20210106-1
++#include "ukui_frame/xatom-helper.h"
++
+ //注意: x11的头文件需要放置在QJson/QDbus的后面
+ #include <X11/Xlib.h>
++#include "ukui_frame/xatom-helper.h"
+ 
+ using namespace Global;
+ 
+@@ -155,9 +159,15 @@ MainWindow::MainWindow(QString arch_type
+ 
+     //qDebug() << "qApp->devicePixelRatio():" << qApp->devicePixelRatio();
+ 
++//    m_f1dbus = new DaemonIpcDbus;
++    // 添加窗管协议
++    MotifWmHints hints;
++    hints.flags = MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS;
++    hints.functions = MWM_FUNC_ALL;
++    hints.decorations = MWM_DECOR_BORDER;
++    XAtomHelper::getInstance()->setWindowMotifHint(winId(), hints);
+ 
+-
+-    this->setWindowFlags(Qt::FramelessWindowHint/* | Qt::WindowStaysOnTopHint*/);//设置窗体标题栏隐藏并设置位于顶层
++    //this->setWindowFlags(Qt::FramelessWindowHint/* | Qt::WindowStaysOnTopHint*/);//设置窗体标题栏隐藏并设置位于顶层
+     this->setMouseTracking(true);//可获取鼠标跟踪效果，界面拉伸需要这个属性
+     this->setAutoFillBackground(true);
+     // lc change 取消窗口透明 否则mplayer引擎无法正常播放视频
+@@ -342,22 +352,23 @@ MainWindow::~MainWindow()
+         delete m_toolbarMenu;
+         m_toolbarMenu = nullptr;
+     }
+-    if (m_resizeCornerBtn) {
+-        delete m_resizeCornerBtn;
+-        m_resizeCornerBtn = nullptr;
+-    }
+-    if (m_resizeCornerBtnrt) {
+-        delete m_resizeCornerBtnrt;
+-        m_resizeCornerBtnrt = nullptr;
+-    }
+-    if (m_resizeCornerBtnlt) {
+-        delete m_resizeCornerBtnlt;
+-        m_resizeCornerBtnlt = nullptr;
+-    }
+-    if (m_resizeCornerBtnlb) {
+-        delete m_resizeCornerBtnlb;
+-        m_resizeCornerBtnlb = nullptr;
+-    }
++    // lc change 20210106-1 添加窗管协议后不需要自己做缩放
++//    if (m_resizeCornerBtn) {
++//        delete m_resizeCornerBtn;
++//        m_resizeCornerBtn = nullptr;
++//    }
++//    if (m_resizeCornerBtnrt) {
++//        delete m_resizeCornerBtnrt;
++//        m_resizeCornerBtnrt = nullptr;
++//    }
++//    if (m_resizeCornerBtnlt) {
++//        delete m_resizeCornerBtnlt;
++//        m_resizeCornerBtnlt = nullptr;
++//    }
++//    if (m_resizeCornerBtnlb) {
++//        delete m_resizeCornerBtnlb;
++//        m_resizeCornerBtnlb = nullptr;
++//    }
+     if (m_topToolbar) {
+         delete m_topToolbar;
+         m_topToolbar = nullptr;
+@@ -405,7 +416,8 @@ void MainWindow::createPanel()
+ 
+ void MainWindow::createVideoWindow()
+ {
+-    m_mplayerWindow = new VideoWindow(m_centralWidget);
++//    m_mplayerWindow = new VideoWindow(m_centralWidget);
++    m_mplayerWindow = new VideoWindow;
+     m_mplayerWindow->setColorKey("121212");//视频显示区域背景色设置为黑色
+     m_mplayerWindow->setContentsMargins(0, 0, 0, 0);
+     m_mplayerWindow->allowVideoMovement(pref->allow_video_movement);
+@@ -523,9 +535,9 @@ void MainWindow::createPlaylist()
+ 
+ void MainWindow::createTopTitleBar()
+ {
+-    m_topToolbar = new TitleWidget(this);
++    m_topToolbar = new TitleWidget;
+     m_topToolbar->setFixedHeight(TOP_TOOLBAR_HEIGHT);
+-    this->setMenuWidget(m_topToolbar);
++//    this->setMenuWidget(m_topToolbar);
+     m_topToolbar->setMouseTracking(true);
+     //m_topToolbar->setAttribute(Qt::WA_X11DoNotAcceptFocus, true);
+ 
+@@ -595,42 +607,43 @@ void MainWindow::createBottomToolBar()
+ #endif
+     });
+ 
+-    m_resizeCornerBtn = new QPushButton(m_bottomToolbar);
+-    m_resizeCornerBtn->setFocusPolicy(Qt::NoFocus);
+-    m_resizeCornerBtn->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
+-    m_resizeCornerBtn->setFixedSize(10, 10);
+-    m_resizeCornerBtn->setCursor(Qt::SizeFDiagCursor);
+-    m_resizeCornerBtn->move(m_bottomToolbar->width()-10, m_bottomToolbar->height()-10);
+-    m_resizeCornerBtn->installEventFilter(this);
+-    m_resizeCornerBtn->raise();
+-
+-    // lc add 20201109-1
+-    m_resizeCornerBtnlt = new QPushButton(m_topToolbar);
+-    m_resizeCornerBtnlt->setFocusPolicy(Qt::NoFocus);
+-    m_resizeCornerBtnlt->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
+-    m_resizeCornerBtnlt->setFixedSize(10, 10);
+-    m_resizeCornerBtnlt->setCursor(Qt::SizeFDiagCursor);
+-    m_resizeCornerBtnlt->move(0, 0);
+-    m_resizeCornerBtnlt->installEventFilter(this);
+-    m_resizeCornerBtnlt->raise();
+-
+-    m_resizeCornerBtnlb = new QPushButton(m_bottomToolbar);
+-    m_resizeCornerBtnlb->setFocusPolicy(Qt::NoFocus);
+-    m_resizeCornerBtnlb->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
+-    m_resizeCornerBtnlb->setFixedSize(10, 10);
+-    m_resizeCornerBtnlb->setCursor(Qt::SizeBDiagCursor);
+-    m_resizeCornerBtnlb->move(10, m_bottomToolbar->height()-10);
+-    m_resizeCornerBtnlb->installEventFilter(this);
+-    m_resizeCornerBtnlb->raise();
+-
+-    m_resizeCornerBtnrt = new QPushButton(m_topToolbar);
+-    m_resizeCornerBtnrt->setFocusPolicy(Qt::NoFocus);
+-    m_resizeCornerBtnrt->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
+-    m_resizeCornerBtnrt->setFixedSize(10, 10);
+-    m_resizeCornerBtnrt->setCursor(Qt::SizeBDiagCursor);
+-    m_resizeCornerBtnrt->move(m_bottomToolbar->width()-10, 10);
+-    m_resizeCornerBtnrt->installEventFilter(this);
+-    m_resizeCornerBtnrt->raise();
++    // lc change 20210106-1
++//    m_resizeCornerBtn = new QPushButton(m_bottomToolbar);
++//    m_resizeCornerBtn->setFocusPolicy(Qt::NoFocus);
++//    m_resizeCornerBtn->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
++//    m_resizeCornerBtn->setFixedSize(10, 10);
++//    m_resizeCornerBtn->setCursor(Qt::SizeFDiagCursor);
++//    m_resizeCornerBtn->move(m_bottomToolbar->width()-10, m_bottomToolbar->height()-10);
++//    m_resizeCornerBtn->installEventFilter(this);
++//    m_resizeCornerBtn->raise();
++
++//    // lc add 20201109-1
++//    m_resizeCornerBtnlt = new QPushButton(m_topToolbar);
++//    m_resizeCornerBtnlt->setFocusPolicy(Qt::NoFocus);
++//    m_resizeCornerBtnlt->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
++//    m_resizeCornerBtnlt->setFixedSize(10, 10);
++//    m_resizeCornerBtnlt->setCursor(Qt::SizeFDiagCursor);
++//    m_resizeCornerBtnlt->move(0, 0);
++//    m_resizeCornerBtnlt->installEventFilter(this);
++//    m_resizeCornerBtnlt->raise();
++
++//    m_resizeCornerBtnlb = new QPushButton(m_bottomToolbar);
++//    m_resizeCornerBtnlb->setFocusPolicy(Qt::NoFocus);
++//    m_resizeCornerBtnlb->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
++//    m_resizeCornerBtnlb->setFixedSize(10, 10);
++//    m_resizeCornerBtnlb->setCursor(Qt::SizeBDiagCursor);
++//    m_resizeCornerBtnlb->move(10, m_bottomToolbar->height()-10);
++//    m_resizeCornerBtnlb->installEventFilter(this);
++//    m_resizeCornerBtnlb->raise();
++
++//    m_resizeCornerBtnrt = new QPushButton(this);
++//    m_resizeCornerBtnrt->setFocusPolicy(Qt::NoFocus);
++//    m_resizeCornerBtnrt->setStyleSheet("QPushButton{background-image:url(':/res/dragbar_normal.png');border:0px;}QPushButton:hover{background-image:url(':/res/dragbar_normal.png')}QPushButton:pressed{background-image:url(':/res/dragbar_normal.png')}");
++//    m_resizeCornerBtnrt->setFixedSize(10, 10);
++//    m_resizeCornerBtnrt->setCursor(Qt::SizeBDiagCursor);
++//    m_resizeCornerBtnrt->move(m_bottomToolbar->width()-10, 10);
++//    m_resizeCornerBtnrt->installEventFilter(this);
++//    m_resizeCornerBtnrt->raise();
+     // lc add 20201109-1 end
+ 
+     connect(m_bottomController, &BottomController::requestShow, this, [=] {
+@@ -1345,7 +1358,7 @@ void MainWindow::createTrayActions()
+     action_openshotsdir->change(Images::icon("open_screen"), tr("Open screenshots folder"));
+ 
+     connect(action_show, SIGNAL(triggered()), this, SLOT(showMainWindow()));
+-    connect(action_openshotsdir, &MyAction::toggled, this, [=] () {
++    connect(action_openshotsdir, &MyAction::triggered, this, [=] () {
+         bool open_enabled = ((!pref->screenshot_directory.isEmpty()) && (QFileInfo(pref->screenshot_directory).isDir()));
+         if (open_enabled) {
+             QDesktopServices::openUrl(QUrl(QString("file:%1").arg(pref->screenshot_directory), QUrl::TolerantMode));
+@@ -1660,12 +1673,13 @@ void MainWindow::toggleFullscreen(bool b
+ 
+         showFullScreen();
+         m_bottomToolbar->onFullScreen();//让全屏/取消全屏的按钮更换图片为取消全屏
+-        this->m_resizeCornerBtn->hide();
++        // lc change 20210106-1
++//        this->m_resizeCornerBtn->hide();
+ 
+-        // lc add 20201109-1
+-        m_resizeCornerBtnrt->hide();
+-        m_resizeCornerBtnlt->hide();
+-        m_resizeCornerBtnlb->hide();
++//        // lc add 20201109-1
++//        m_resizeCornerBtnrt->hide();
++//        m_resizeCornerBtnlt->hide();
++//        m_resizeCornerBtnlb->hide();
+         // lc add 20201109-1 end
+ 
+         m_topToolbar->updateMaxButtonStatus(true);
+@@ -1686,12 +1700,13 @@ void MainWindow::toggleFullscreen(bool b
+ //            this->showMaximized(); // It has to be called after showNormal()
+ //        }
+         m_bottomToolbar->onUnFullScreen();//让全屏/取消全屏的按钮更换图片为全屏
+-        this->m_resizeCornerBtn->show();
++        // lc change 20210106
++//        this->m_resizeCornerBtn->show();
+ 
+-        // lc add 20201109-1
+-        m_resizeCornerBtnrt->show();
+-        m_resizeCornerBtnlt->show();
+-        m_resizeCornerBtnlb->show();
++//        // lc add 20201109-1
++//        m_resizeCornerBtnrt->show();
++//        m_resizeCornerBtnlt->show();
++//        m_resizeCornerBtnlb->show();
+         // lc add 20201109-1 end
+ 
+         if (this->m_escWidget->isVisible()) {//For Esc Key：不能用this->onShowOrHideEscWidget(false)
+@@ -2257,7 +2272,7 @@ void MainWindow::applyNewPreferences()
+ 
+ void MainWindow::showFilePropertiesDialog()
+ {
+-    exitFullscreenIfNeeded();
++//    exitFullscreenIfNeeded();
+ 
+     if (!m_propertyDialog) {
+         createFilePropertiesDialog();
+@@ -3509,53 +3524,54 @@ void MainWindow::onShowOrHideEscWidget(b
+ 
+ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+ {
+-    if (obj == this->m_resizeCornerBtn) {
+-        if (!this->isMaximized()) {
+-            if (event->type() == QEvent::MouseButtonPress) {
+-                this->m_resizeFlag = true;
+-                m_dir = RIGHTBOTTOM;
+-            }
+-            else if (event->type() == QEvent::MouseButtonRelease) {
+-                this->m_resizeFlag = false;
+-            }
+-        }
+-    }
+-    else if(obj == this->m_resizeCornerBtnlb)
+-    {
+-        if (!this->isMaximized()) {
+-            if (event->type() == QEvent::MouseButtonPress) {
+-                this->m_resizeFlag = true;
+-                m_dir = LEFTBOTTOM;
+-            }
+-            else if (event->type() == QEvent::MouseButtonRelease) {
+-                this->m_resizeFlag = false;
+-            }
+-        }
+-    }
+-    else if(obj == this->m_resizeCornerBtnlt)
+-    {
+-        if (!this->isMaximized()) {
+-            if (event->type() == QEvent::MouseButtonPress) {
+-                this->m_resizeFlag = true;
+-                m_dir = LEFTTOP;
+-            }
+-            else if (event->type() == QEvent::MouseButtonRelease) {
+-                this->m_resizeFlag = false;
+-            }
+-        }
+-    }
+-    else if(obj == this->m_resizeCornerBtnrt)
+-    {
+-        if (!this->isMaximized()) {
+-            if (event->type() == QEvent::MouseButtonPress) {
+-                this->m_resizeFlag = true;
+-                m_dir = RIGHTTOP;
+-            }
+-            else if (event->type() == QEvent::MouseButtonRelease) {
+-                this->m_resizeFlag = false;
+-            }
+-        }
+-    }
++    // lc change 20210106
++//    if (obj == this->m_resizeCornerBtn) {
++//        if (!this->isMaximized()) {
++//            if (event->type() == QEvent::MouseButtonPress) {
++//                this->m_resizeFlag = true;
++//                m_dir = RIGHTBOTTOM;
++//            }
++//            else if (event->type() == QEvent::MouseButtonRelease) {
++//                this->m_resizeFlag = false;
++//            }
++//        }
++//    }
++//    else if(obj == this->m_resizeCornerBtnlb)
++//    {
++//        if (!this->isMaximized()) {
++//            if (event->type() == QEvent::MouseButtonPress) {
++//                this->m_resizeFlag = true;
++//                m_dir = LEFTBOTTOM;
++//            }
++//            else if (event->type() == QEvent::MouseButtonRelease) {
++//                this->m_resizeFlag = false;
++//            }
++//        }
++//    }
++//    else if(obj == this->m_resizeCornerBtnlt)
++//    {
++//        if (!this->isMaximized()) {
++//            if (event->type() == QEvent::MouseButtonPress) {
++//                this->m_resizeFlag = true;
++//                m_dir = LEFTTOP;
++//            }
++//            else if (event->type() == QEvent::MouseButtonRelease) {
++//                this->m_resizeFlag = false;
++//            }
++//        }
++//    }
++//    else if(obj == this->m_resizeCornerBtnrt)
++//    {
++//        if (!this->isMaximized()) {
++//            if (event->type() == QEvent::MouseButtonPress) {
++//                this->m_resizeFlag = true;
++//                m_dir = RIGHTTOP;
++//            }
++//            else if (event->type() == QEvent::MouseButtonRelease) {
++//                this->m_resizeFlag = false;
++//            }
++//        }
++//    }
+     /*else {
+         if (event->type() == QEvent::KeyPress) {
+             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+@@ -3622,7 +3638,7 @@ void MainWindow::mouseReleaseEvent(QMous
+ 
+ void MainWindow::mouseMoveEvent(QMouseEvent *event)
+ {
+-    QMainWindow::mouseMoveEvent(event);
++    return QMainWindow::mouseMoveEvent(event);
+ 
+     if (this->isMaximized()) {
+         return;
+@@ -3639,7 +3655,7 @@ void MainWindow::mouseMoveEvent(QMouseEv
+             case LEFTTOP:
+                 t_rect.setTopLeft(event->globalPos());
+                 setGeometry(t_rect);
+-		break;
++                break;
+             case LEFTBOTTOM:
+                 t_rect.setBottomLeft(event->globalPos());
+                 setGeometry(t_rect);
+@@ -3701,11 +3717,12 @@ void MainWindow::resizeEvent(QResizeEven
+     this->m_bottomToolbar->resize(newSize.width(), BOTTOM_TOOLBAR_HEIGHT);
+     this->m_bottomToolbar->move(0, newSize.height() - BOTTOM_TOOLBAR_HEIGHT);
+     this->m_bottomToolbar->onShowControlWidget();
+-    m_resizeCornerBtn->move(this->m_bottomToolbar->width()- 15, this->m_bottomToolbar->height() - 15);
+-    // lc add 20201109-1
+-    m_resizeCornerBtnlt->move(0, 0);
+-    m_resizeCornerBtnlb->move(0, this->m_bottomToolbar->height() - 15);
+-    m_resizeCornerBtnrt->move(m_topToolbar->width()- 15, 0);
++    // lc change 20210106
++//    m_resizeCornerBtn->move(this->m_bottomToolbar->width()- 15, this->m_bottomToolbar->height() - 15);
++//    // lc add 20201109-1
++//    m_resizeCornerBtnlt->move(0, 0);
++//    m_resizeCornerBtnlb->move(0, this->m_bottomToolbar->height() - 15);
++//    m_resizeCornerBtnrt->move(m_topToolbar->width()- 15, 0);
+     // lc add 20201109-1 end
+ }
+ 
+--- kylin-video-2.1.0.orig/src/mainwindow.h
++++ kylin-video-2.1.0/src/mainwindow.h
+@@ -119,7 +119,7 @@ public:
+     void setPlaylistVisible(bool visible);
+     void slideEdgeWidget(QWidget *right, QRect start, QRect end, int delay, bool hide = false);
+     void bindThreadWorker(InfoWorker *worker);
+-    Core * getCore() { return m_core; };
++    Core * getCore() { return m_core; }
+ 
+     //zyb add for d-bus
+     bool CanGoNext() const;
+@@ -285,10 +285,10 @@ private:
+     bool m_dragWindow;
+     int m_lastPlayingSeek;
+     bool m_resizeFlag;
+-    QPushButton *m_resizeCornerBtn = nullptr;
+-    QPushButton *m_resizeCornerBtnlt = nullptr;
+-    QPushButton *m_resizeCornerBtnlb = nullptr;
+-    QPushButton *m_resizeCornerBtnrt = nullptr;
++//    QPushButton *m_resizeCornerBtn = nullptr;
++//    QPushButton *m_resizeCornerBtnlt = nullptr;
++//    QPushButton *m_resizeCornerBtnlb = nullptr;
++//    QPushButton *m_resizeCornerBtnrt = nullptr;
+     QSystemTrayIcon *m_mainTray = nullptr;
+     PlayMask *m_playMaskWidget = nullptr;
+     EscTip *m_escWidget = nullptr;
+--- kylin-video-2.1.0.orig/src/res.qrc
++++ kylin-video-2.1.0/src/res.qrc
+@@ -129,6 +129,11 @@
+         <file>res/window-maximize-symbolic.png</file>
+         <file>res/window-minimize-symbolic.png</file>
+         <file>res/window-restore-symbolic.png</file>
++        <file>res/common-close-white.png</file>
++        <file>res/common-maximize-white.png</file>
++        <file>res/common-minimize-white.png</file>
++        <file>res/common-more-white.png</file>
++        <file>res/common-restore-white.png</file>
+     </qresource>
+     <qresource prefix="/qss">
+         <file>res/style.qss</file>
+--- kylin-video-2.1.0.orig/src/src.pro
++++ kylin-video-2.1.0/src/src.pro
+@@ -144,6 +144,7 @@ HEADERS += smplayer/mplayerversion.h \
+         mainwindow.h \
+         autohidecursorwidget.h \
+         displaylayercomposer.h \
++        ukui_frame/xatom-helper.h \
+         videowindow.h \
+         poweroffdialog.h \
+         controllerworker.h \
+@@ -253,6 +254,7 @@ SOURCES	+= smplayer/version.cpp \
+         mainwindow.cpp \
+         autohidecursorwidget.cpp \
+         displaylayercomposer.cpp \
++        ukui_frame/xatom-helper.cpp \
+         videowindow.cpp \
+         poweroffdialog.cpp \
+         controllerworker.cpp \
+--- kylin-video-2.1.0.orig/src/systembutton.cpp
++++ kylin-video-2.1.0/src/systembutton.cpp
+@@ -23,6 +23,7 @@
+ SystemButton::SystemButton(QWidget *parent) :
+     QPushButton(parent)
+     , m_alignOff(0)
++    , IsCloseBtn(false)
+ {
+     this->setMouseTracking(false);
+     status = NORMAL;
+@@ -102,25 +103,21 @@ void SystemButton::paintEvent(QPaintEven
+     }
+     if (status != NORMAL) {
+         //painter.fillRect(this->rect(), QColor("#3253bc"));
+-        QRect r(m_alignOff, m_alignOff, this->rect().width() - m_alignOff*2, this->rect().height() - m_alignOff*2);
+-        painter.drawPixmap(r, pixmap.copy(0, 0, btn_width, btn_height));
++        //QRect r(m_alignOff, m_alignOff, this->rect().width() - m_alignOff*2, this->rect().height() - m_alignOff*2);
++        //painter.drawPixmap(r, pixmap.copy(0, 0, btn_width, btn_height));
+         QPainterPath path;
+ 
+         path.addRoundedRect(QRectF(rect()), 2, 2);
+-        painter.setOpacity(0.1);
+-        painter.fillPath(path, QColor("#2bb6ea"));
+-    }
+-    else {
+-        painter.setCompositionMode(QPainter::CompositionMode_Clear);
+-        QPainterPath path;
+-
+-        path.addRoundedRect(QRectF(rect()), 2, 2);
+-        painter.setOpacity(0.1);
+-        painter.fillPath(path, QColor("#000000"));
+-        painter.setOpacity(1);
+-        painter.setCompositionMode(QPainter::CompositionMode_Source);
+-        QRect r(m_alignOff, m_alignOff, this->rect().width() - m_alignOff*2, this->rect().height() - m_alignOff*2);
+-        painter.drawPixmap(r, pixmap.copy(0, 0, btn_width, btn_height));
++        if(!IsCloseBtn)
++        {
++            painter.setOpacity(0.1);
++            painter.fillPath(path, QColor("#ffffff"));
++        }
++        else
++        {
++            painter.setOpacity(0.8);
++            painter.fillPath(path, QColor("#F86457"));
++        }
+     }
+ 
+     painter.end();
+--- kylin-video-2.1.0.orig/src/systembutton.h
++++ kylin-video-2.1.0/src/systembutton.h
+@@ -32,6 +32,7 @@ public:
+     explicit SystemButton(bool singleIcon, QWidget *parent = 0);
+ 
+     void loadPixmap(QString pic_name, int w, int h, int alignOff = 0);
++    bool IsCloseBtn;
+ 
+ protected:
+     void enterEvent(QEvent *);
+--- kylin-video-2.1.0.orig/src/titlebutton.cpp
++++ kylin-video-2.1.0/src/titlebutton.cpp
+@@ -57,7 +57,7 @@ void TitleButton::mousePressEvent(QMouse
+ void TitleButton::paintEvent(QPaintEvent *e)
+ {
+     const QColor lbc = isActived() ? LEFT_COLOR_ACTIVED : QColor("#2e2e2e");//没有选中时，让其左侧2px宽度的区域颜色和title_widget背景颜色一致
+-    const QColor rbc = isActived() ? RIGHT_COLOR_ACTIVED : QColor("#2e2e2e");
++    const QColor rbc = isActived() ? RIGHT_COLOR_ACTIVED : QColor("#ffffff");
+     const QRect lr(0, 0, LEFT_WIDTH, height());
+     const QRect rr(LEFT_WIDTH, 0, width() - LEFT_WIDTH, height());
+ 
+--- kylin-video-2.1.0.orig/src/titlewidget.cpp
++++ kylin-video-2.1.0/src/titlewidget.cpp
+@@ -37,14 +37,14 @@ TitleWidget::TitleWidget(QWidget *parent
+     , m_startDrag(QPoint(0,0))
+ {
+     this->setMouseTracking(true);
+-    this->setAutoFillBackground(true);
+-    this->setFocusPolicy(Qt::StrongFocus);
++//    this->setAutoFillBackground(true);
++//    this->setFocusPolicy(Qt::StrongFocus);
+     this->setAttribute(Qt::WA_TranslucentBackground, true);//窗体标题栏不透明，背景透明
+ //    this->setStyleSheet("QWidget{border: none; background-color: transparent; border-top-left-radius: 16px; border-top-right-radius: 16px;}");
+ 
+     initWidgets();
+ 
+-    this->installEventFilter(this);
++//    this->installEventFilter(this);
+ }
+ 
+ TitleWidget::~TitleWidget()
+@@ -108,8 +108,8 @@ void TitleWidget::initLeftContent()
+     QWidget *w = new QWidget;
+ //    w->setStyleSheet("QWidget{border:none; background-color: transparent;}");
+     m_lLayout = new QHBoxLayout(w);
+-    m_lLayout->setContentsMargins(6, 0, 0, 0);
+-    m_lLayout->setSpacing(5);
++    m_lLayout->setContentsMargins(8, 8, 0, 0);
++    m_lLayout->setSpacing(8);
+ 
+     m_logoLabel = new QLabel(this);
+ //    QImage image(":/res/logo.png");
+@@ -120,7 +120,7 @@ void TitleWidget::initLeftContent()
+ 
+     m_softLabel = new QLabel(this);
+     m_softLabel->setText(tr("Kylin Video"));
+-    m_softLabel->setStyleSheet("QLabel{font-size:14px;font-style:italic;color:#ffffff;}");//font-weight:bold;
++    m_softLabel->setStyleSheet("QLabel{font-size:14px;/*font-style:italic;*/color:#ffffff;}");//font-weight:bold;
+     m_lLayout->addWidget(m_logoLabel);
+     m_lLayout->addWidget(m_softLabel);
+     m_layout->addWidget(w, 1, Qt::AlignLeft);
+@@ -162,31 +162,80 @@ void TitleWidget::initRightContent()
+     QWidget *w = new QWidget;
+ //    w->setStyleSheet("QWidget{border:none; background-color: transparent;}");
+     m_rLayout = new QHBoxLayout(w);
+-    m_rLayout->setContentsMargins(0, 0, 6, 0);
+-    m_rLayout->setSpacing(0);
++    m_rLayout->setContentsMargins(0, 4, 4, 0);
++    m_rLayout->setSpacing(4);
+     m_layout->addWidget(w, 1, Qt::AlignRight);
+ 
+-    menu_button = new SystemButton(true);
+-    menu_button->setMouseTracking(true);
+-    menu_button->loadPixmap(":/res/view-grid-symbolic.png", 36, 36, 10);//menu_button->loadPixmap(":/res/option.png");
+-    menu_button->setObjectName("menu_button");
+-    min_button = new SystemButton(true);
+-    min_button->loadPixmap(":/res/window-minimize-symbolic.png", 36, 36, 10);//min_button->loadPixmap(":/res/min.png");
+-    min_button->setObjectName("min_button");
+-    max_button = new SystemButton(true);
+-    max_button->loadPixmap(":/res/window-maximize-symbolic.png", 36, 36, 10);//max_button->loadPixmap(":/res/max.png");
+-    max_button->setObjectName("max_button");
+-    close_button = new SystemButton(true);
+-    close_button->loadPixmap(":/res/window-close-symbolic.png", 36, 36, 10);//close_button->loadPixmap(":/res/close.png");
+-    close_button->setObjectName("close_button");
+-//    menu_button->setFixedSize(36,36);
+-//    min_button->setFixedSize(36,36);
+-//    max_button->setFixedSize(36,36);
+-//    close_button->setFixedSize(36,36);
+-//    min_button->setObjectName("min_button");
+-//    close_button->setObjectName("close_button");
+-//    menu_button->setObjectName("menu_button");
+-//    max_button->setObjectName("max_button");
++    menu_button = new QPushButton;
++    menu_button->setObjectName(QString::fromUtf8("menuBtn"));
++    menu_button->setMinimumSize(QSize(30, 30));
++    menu_button->setMaximumSize(QSize(30, 30));
++
++    max_button = new QPushButton;
++    max_button->setObjectName(QString::fromUtf8("max_button"));
++    max_button->setMinimumSize(QSize(30, 30));
++    max_button->setMaximumSize(QSize(30, 30));
++
++    close_button = new QPushButton;
++    close_button->setObjectName(QString::fromUtf8("close_button"));
++    close_button->setMinimumSize(QSize(30, 30));
++    close_button->setMaximumSize(QSize(30, 30));
++
++    min_button = new QPushButton;
++    min_button->setObjectName(QString::fromUtf8("min_button"));
++    min_button->setMinimumSize(QSize(30, 30));
++    min_button->setMaximumSize(QSize(30, 30));
++
++
++    //隐藏menu下箭头
++    //menu_button->setStyleSheet("QPushButton::menu-indicator{image:none}");
++    menu_button->setProperty("isOptionButton", true);
++    //设置是否自动凸起
++//    menu_button->setAutoRaise(false);
++//    menu_button->setIconSize(QSize(16, 16));
++//    menu_button->setPopupMode(QToolButton::InstantPopup);
++
++
++//    menu_button->setProperty("useIconHighlightEffect", true);
++//    menu_button->setProperty("iconHighlightEffectMode", 1);
++    menu_button->setProperty("isWindowButton", 0x1);
++    menu_button->setProperty("useIconHighlightEffect", 0x2);
++    menu_button->setFlat(true);
++    menu_button->setIcon(QIcon::fromTheme("open-menu-symbolic"));
++    menu_button->setProperty("setIconHighlightEffectDefaultColor",
++                              menu_button->palette().color(QPalette::Active, QPalette::Base));
++//    menu_button->setAutoRaise(true);
++
++//    max_button->setProperty("useIconHighlightEffect", true);
++//    max_button->setProperty("iconHighlightEffectMode", 1);
++    max_button->setProperty("isWindowButton", 0x1);
++    max_button->setProperty("useIconHighlightEffect", 0x2);
++    max_button->setFlat(true);
++    max_button->setIcon(QIcon::fromTheme("window-maximize-symbolic"));
++    max_button->setProperty("setIconHighlightEffectDefaultColor",
++                            max_button->palette().color(QPalette::Active, QPalette::Base));
++//    max_button->setAutoRaise(true);
++
++//    close_button->setProperty("useIconHighlightEffect", true);
++//    close_button->setProperty("iconHighlightEffectMode", 1);
++    close_button->setProperty("isWindowButton", 0x2);
++    close_button->setProperty("useIconHighlightEffect", 0x8);
++    close_button->setFlat(true);
++    close_button->setIcon(QIcon::fromTheme("window-close-symbolic"));
++    close_button->setProperty("setIconHighlightEffectDefaultColor",
++                              close_button->palette().color(QPalette::Active, QPalette::Base));
++//    close_button->enterEvent();
++//    close_button->setAutoRaise(true);
++
++//    min_button->setProperty("useIconHighlightEffect", true);
++//    min_button->setProperty("iconHighlightEffectMode", 1);
++    min_button->setProperty("isWindowButton", 0x1);
++    min_button->setProperty("useIconHighlightEffect", 0x2);
++    min_button->setFlat(true);
++    min_button->setIcon(QIcon::fromTheme("window-minimize-symbolic"));
++    min_button->setProperty("setIconHighlightEffectDefaultColor",
++                            min_button->palette().color(QPalette::Active, QPalette::Base));
++//    min_button->setAutoRaise(true);
+ 
+     min_button->setFocusPolicy(Qt::NoFocus);
+     close_button->setFocusPolicy(Qt::NoFocus);
+@@ -201,8 +250,10 @@ void TitleWidget::initRightContent()
+     connect(menu_button, SIGNAL(clicked()), this, SIGNAL(requestShowMenu()));
+     connect(close_button, SIGNAL(clicked()), this, SIGNAL(requestCloseWindow()));
+     connect(max_button, SIGNAL(clicked(bool)), this, SIGNAL(requestMaxWindow(bool)));
+-    connect(min_button, &SystemButton::clicked, this, [=] () {
+-        max_button->loadPixmap(":/res/window-maximize-symbolic.png", 36, 36, 10);//max_button->loadPixmap(":/res/max.png");
++    connect(min_button, &QPushButton::clicked, this, [=] () {
++        max_button->setIcon(QIcon::fromTheme("window-restore-symbolic"));
++        max_button->setProperty("setIconHighlightEffectDefaultColor",
++                                max_button->palette().color(QPalette::Active, QPalette::Base));
+         emit this->requestMinWindow();
+     });
+ 
+@@ -211,10 +262,14 @@ void TitleWidget::initRightContent()
+ void TitleWidget::updateMaxButtonStatus(bool is_maxed)
+ {
+     if (is_maxed) {
+-        max_button->loadPixmap(":/res/window-restore-symbolic.png", 36, 36, 10);//max_button->loadPixmap(":/res/unmax.png");
++        max_button->setIcon(QIcon::fromTheme("window-restore-symbolic"));
++        max_button->setProperty("setIconHighlightEffectDefaultColor",
++                                max_button->palette().color(QPalette::Active, QPalette::Base));
+     }
+     else {
+-        max_button->loadPixmap(":/res/window-maximize-symbolic.png", 36, 36, 10);//max_button->loadPixmap(":/res/max.png");
++        max_button->setIcon(QIcon::fromTheme("window-maximize-symbolic"));
++        max_button->setProperty("setIconHighlightEffectDefaultColor",
++                                max_button->palette().color(QPalette::Active, QPalette::Base));
+     }
+ }
+ 
+@@ -286,6 +341,7 @@ void TitleWidget::updateMaxButtonStatus(
+ 
+ bool TitleWidget::eventFilter(QObject * obj, QEvent * event)
+ {
++    return eventFilter(obj, event);
+     QEvent::Type type = event->type();
+     if (type != QEvent::MouseButtonPress
+         && type != QEvent::MouseButtonRelease
+--- kylin-video-2.1.0.orig/src/titlewidget.h
++++ kylin-video-2.1.0/src/titlewidget.h
+@@ -29,9 +29,11 @@
+ #include <QVBoxLayout>
+ #include <QPropertyAnimation>
+ #include <QPointer>
++#include <QToolButton>
+ 
+ #include "systembutton.h"
+ #include "utils.h"
++//#include "highlight-effect.h"
+ 
+ class QHBoxLayout;
+ class QProcess;
+@@ -56,7 +58,7 @@ signals:
+     void mouseMovedDiff(QPoint);
+ 
+ protected:
+-    //void mouseDoubleClickEvent(QMouseEvent *event) override;
++//    void mouseDoubleClickEvent(QMouseEvent *event) override;
+ 
+ private:
+     enum MenuItemId {
+@@ -85,10 +87,14 @@ private:
+     QHBoxLayout *m_lLayout = nullptr;
+     QHBoxLayout *m_mLayout = nullptr;
+     QHBoxLayout *m_rLayout = nullptr;
+-    SystemButton *min_button = nullptr;
+-    SystemButton *close_button = nullptr;
+-    SystemButton *max_button = nullptr;
+-    SystemButton *menu_button = nullptr;
++//    QToolButton *min_button = nullptr;
++//    QToolButton *close_button = nullptr;
++//    QToolButton *max_button = nullptr;
++//    QToolButton *menu_button = nullptr;
++    QPushButton *min_button = nullptr;
++    QPushButton *close_button = nullptr;
++    QPushButton *max_button = nullptr;
++    QPushButton *menu_button = nullptr;
+ 
+ public slots:
+     void onSetPlayingTitleName(const QString &name);
+--- /dev/null
++++ kylin-video-2.1.0/src/ukui_frame/xatom-helper.cpp
+@@ -0,0 +1,213 @@
++/*
++ * KWin Style UKUI
++ *
++ * Copyright (C) 2020, KylinSoft Co., Ltd.
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
++ *
++ * Authors: Yue Lan <lanyue@kylinos.cn>
++ *
++ */
++
++#include "xatom-helper.h"
++
++#include <limits.h>
++#include <QX11Info>
++#include <X11/X.h>
++#include <X11/Xatom.h>
++#include <X11/Xlib.h>
++
++static XAtomHelper *global_instance = nullptr;
++
++XAtomHelper *XAtomHelper::getInstance()
++{
++    if (!global_instance)
++        global_instance = new XAtomHelper;
++    return global_instance;
++}
++
++bool XAtomHelper::isFrameLessWindow(int winId)
++{
++    auto hints = getInstance()->getWindowMotifHint(winId);
++    if (hints.flags == MWM_HINTS_DECORATIONS && hints.functions == 1) {
++        return true;
++    }
++    return false;
++}
++
++bool XAtomHelper::isWindowDecorateBorderOnly(int winId)
++{
++    return isWindowMotifHintDecorateBorderOnly(getInstance()->getWindowMotifHint(winId));
++}
++
++bool XAtomHelper::isWindowMotifHintDecorateBorderOnly(const MotifWmHints &hint)
++{
++    bool isDeco = false;
++    if (hint.flags & MWM_HINTS_DECORATIONS && hint.flags != MWM_HINTS_DECORATIONS) {
++        if (hint.decorations == MWM_DECOR_BORDER)
++            isDeco = true;
++    }
++    return isDeco;
++}
++
++bool XAtomHelper::isUKUICsdSupported()
++{
++    // fixme:
++    return false;
++}
++
++bool XAtomHelper::isUKUIDecorationWindow(int winId)
++{
++    if (m_ukuiDecorationAtion == None)
++        return false;
++
++    Atom type;
++    int format;
++    ulong nitems;
++    ulong bytes_after;
++    uchar *data;
++
++    bool isUKUIDecoration = false;
++
++    XGetWindowProperty(QX11Info::display(), winId, m_ukuiDecorationAtion,
++                       0, LONG_MAX, false,
++                       m_ukuiDecorationAtion, &type,
++                       &format, &nitems,
++                       &bytes_after, &data);
++
++    if (type == m_ukuiDecorationAtion) {
++        if (nitems == 1) {
++            isUKUIDecoration = data[0];
++        }
++    }
++
++    return isUKUIDecoration;
++}
++
++UnityCorners XAtomHelper::getWindowBorderRadius(int winId)
++{
++    UnityCorners corners;
++
++    Atom type;
++    int format;
++    ulong nitems;
++    ulong bytes_after;
++    uchar *data;
++
++    if (m_unityBorderRadiusAtom != None) {
++        XGetWindowProperty(QX11Info::display(), winId, m_unityBorderRadiusAtom,
++                           0, LONG_MAX, false,
++                           XA_CARDINAL, &type,
++                           &format, &nitems,
++                           &bytes_after, &data);
++
++        if (type == XA_CARDINAL) {
++            if (nitems == 4) {
++                corners.topLeft = static_cast<ulong>(data[0]);
++                corners.topRight = static_cast<ulong>(data[1*sizeof (ulong)]);
++                corners.bottomLeft = static_cast<ulong>(data[2*sizeof (ulong)]);
++                corners.bottomRight = static_cast<ulong>(data[3*sizeof (ulong)]);
++            }
++            XFree(data);
++        }
++    }
++
++    return corners;
++}
++
++void XAtomHelper::setWindowBorderRadius(int winId, const UnityCorners &data)
++{
++    if (m_unityBorderRadiusAtom == None)
++        return;
++
++    ulong corners[4] = {data.topLeft, data.topRight, data.bottomLeft, data.bottomRight};
++
++    XChangeProperty(QX11Info::display(), winId, m_unityBorderRadiusAtom, XA_CARDINAL,
++                    32, XCB_PROP_MODE_REPLACE, (const unsigned char *) &corners, sizeof (corners)/sizeof (corners[0]));
++}
++
++void XAtomHelper::setWindowBorderRadius(int winId, int topLeft, int topRight, int bottomLeft, int bottomRight)
++{
++    if (m_unityBorderRadiusAtom == None)
++        return;
++
++    ulong corners[4] = {(ulong)topLeft, (ulong)topRight, (ulong)bottomLeft, (ulong)bottomRight};
++
++    XChangeProperty(QX11Info::display(), winId, m_unityBorderRadiusAtom, XA_CARDINAL,
++                    32, XCB_PROP_MODE_REPLACE, (const unsigned char *) &corners, sizeof (corners)/sizeof (corners[0]));
++}
++
++void XAtomHelper::setUKUIDecoraiontHint(int winId, bool set)
++{
++    if (m_ukuiDecorationAtion == None)
++        return;
++
++    XChangeProperty(QX11Info::display(), winId, m_ukuiDecorationAtion, m_ukuiDecorationAtion, 32, XCB_PROP_MODE_REPLACE, (const unsigned char *) &set, 1);
++}
++
++void XAtomHelper::setWindowMotifHint(int winId, const MotifWmHints &hints)
++{
++    if (m_unityBorderRadiusAtom == None)
++        return;
++
++    XChangeProperty(QX11Info::display(), winId, m_motifWMHintsAtom, m_motifWMHintsAtom,
++                    32, XCB_PROP_MODE_REPLACE, (const unsigned char *)&hints, sizeof (MotifWmHints)/ sizeof (ulong));
++}
++
++MotifWmHints XAtomHelper::getWindowMotifHint(int winId)
++{
++    MotifWmHints hints;
++
++    if (m_unityBorderRadiusAtom == None)
++        return hints;
++
++    uchar *data;
++    Atom type;
++    int format;
++    ulong nitems;
++    ulong bytes_after;
++
++    XGetWindowProperty(QX11Info::display(), winId, m_motifWMHintsAtom,
++                       0, sizeof (MotifWmHints)/sizeof (long), false, AnyPropertyType, &type,
++                       &format, &nitems, &bytes_after, &data);
++
++    if (type == None) {
++        return hints;
++    } else {
++        hints = *(MotifWmHints *)data;
++        XFree(data);
++    }
++    return hints;
++}
++
++XAtomHelper::XAtomHelper(QObject *parent) : QObject(parent)
++{
++    if (!QX11Info::isPlatformX11())
++        return;
++
++    m_motifWMHintsAtom = XInternAtom(QX11Info::display(), "_MOTIF_WM_HINTS", true);
++    m_unityBorderRadiusAtom = XInternAtom(QX11Info::display(), "_UNITY_GTK_BORDER_RADIUS", false);
++    m_ukuiDecorationAtion = XInternAtom(QX11Info::display(), "_KWIN_UKUI_DECORAION", false);
++}
++
++Atom XAtomHelper::registerUKUICsdNetWmSupportAtom()
++{
++    // fixme:
++    return None;
++}
++
++void XAtomHelper::unregisterUKUICsdNetWmSupportAtom()
++{
++    // fixme:
++}
+--- /dev/null
++++ kylin-video-2.1.0/src/ukui_frame/xatom-helper.h
+@@ -0,0 +1,108 @@
++/*
++ * KWin Style UKUI
++ *
++ * Copyright (C) 2020, KylinSoft Co., Ltd.
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
++ *
++ * Authors: Yue Lan <lanyue@kylinos.cn>
++ *
++ */
++
++#ifndef XATOMHELPER_H
++#define XATOMHELPER_H
++
++#include <QObject>
++
++struct UnityCorners {
++    ulong topLeft = 0;
++    ulong topRight = 0;
++    ulong bottomLeft = 0;
++    ulong bottomRight = 0;
++};
++
++typedef struct {
++    ulong flags = 0;
++    ulong functions = 0;
++    ulong decorations = 0;
++    long input_mode = 0;
++    ulong status = 0;
++} MotifWmHints, MwmHints;
++
++#define MWM_HINTS_FUNCTIONS     (1L << 0)
++#define MWM_HINTS_DECORATIONS   (1L << 1)
++#define MWM_HINTS_INPUT_MODE    (1L << 2)
++#define MWM_HINTS_STATUS        (1L << 3)
++
++#define MWM_FUNC_ALL            (1L << 0)
++#define MWM_FUNC_RESIZE         (1L << 1)
++#define MWM_FUNC_MOVE           (1L << 2)
++#define MWM_FUNC_MINIMIZE       (1L << 3)
++#define MWM_FUNC_MAXIMIZE       (1L << 4)
++#define MWM_FUNC_CLOSE          (1L << 5)
++
++#define MWM_DECOR_ALL           (1L << 0)
++#define MWM_DECOR_BORDER        (1L << 1)
++#define MWM_DECOR_RESIZEH       (1L << 2)
++#define MWM_DECOR_TITLE         (1L << 3)
++#define MWM_DECOR_MENU          (1L << 4)
++#define MWM_DECOR_MINIMIZE      (1L << 5)
++#define MWM_DECOR_MAXIMIZE      (1L << 6)
++
++#define MWM_INPUT_MODELESS 0
++#define MWM_INPUT_PRIMARY_APPLICATION_MODAL 1
++#define MWM_INPUT_SYSTEM_MODAL 2
++#define MWM_INPUT_FULL_APPLICATION_MODAL 3
++#define MWM_INPUT_APPLICATION_MODAL MWM_INPUT_PRIMARY_APPLICATION_MODAL
++
++#define MWM_TEAROFF_WINDOW	(1L<<0)
++
++namespace UKUI {
++class Decoration;
++}
++
++class XAtomHelper : public QObject
++{
++    friend class UKUI::Decoration;
++    Q_OBJECT
++public:
++    static XAtomHelper *getInstance();
++
++    static bool isFrameLessWindow(int winId);
++
++    bool isWindowDecorateBorderOnly(int winId);
++    bool isWindowMotifHintDecorateBorderOnly(const MotifWmHints &hint);
++    bool isUKUICsdSupported();
++    bool isUKUIDecorationWindow(int winId);
++
++    UnityCorners getWindowBorderRadius(int winId);
++    void setWindowBorderRadius(int winId, const UnityCorners &data);
++    void setWindowBorderRadius(int winId, int topLeft, int topRight, int bottomLeft, int bottomRight);
++    void setUKUIDecoraiontHint(int winId, bool set = true);
++
++    void setWindowMotifHint(int winId, const MotifWmHints &hints);
++    MotifWmHints getWindowMotifHint(int winId);
++
++private:
++    explicit XAtomHelper(QObject *parent = nullptr);
++
++    unsigned long registerUKUICsdNetWmSupportAtom();
++    void unregisterUKUICsdNetWmSupportAtom();
++
++    unsigned long m_motifWMHintsAtom = 0l;
++    unsigned long m_unityBorderRadiusAtom = 0l;
++    unsigned long m_ukuiDecorationAtion = 0l;
++};
++
++#endif // XATOMHELPER_H
+--- kylin-video-2.1.0.orig/src/videowindow.cpp
++++ kylin-video-2.1.0/src/videowindow.cpp
+@@ -65,8 +65,7 @@ VideoWindow::VideoWindow(QWidget* parent
+ 
+     m_displayLayer = new DisplayLayerComposer(this);
+     m_displayLayer->setObjectName("m_displayLayer");
+-    m_displayLayer->setAutoFillBackground(true);
+-//    m_displayLayer->setStyleSheet("QWidget{border:none; border-radius:6px;}");
++//    m_displayLayer->setAutoFillBackground(true);
+ 
+     m_logoLabel = new QLabel(m_displayLayer);
+     m_logoLabel->setAutoFillBackground(true);
+@@ -474,7 +473,7 @@ bool VideoWindow::eventFilter(QObject *o
+         m_dragState = DRAGGING;
+     }
+ 
+-    emit mouseMovedDiff(diff);
++//    emit mouseMovedDiff(diff);
+     m_startDrag = pos;
+     event->accept();
+     return true;
+--- kylin-video-2.1.0.orig/src/videowindow.h
++++ kylin-video-2.1.0/src/videowindow.h
+@@ -38,7 +38,7 @@ public:
+     VideoWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
+     ~VideoWindow();
+ 
+-    DisplayLayerComposer * displayLayer() { return m_displayLayer; };
++    DisplayLayerComposer * displayLayer() { return m_displayLayer; }
+     void moveDisplayLayer(int m_offsetX, int m_offsetY);
+ 
+     void setResolution( int w, int h);
+@@ -57,11 +57,11 @@ public:
+     void setZoom( double );
+     double zoom();
+ 
+-    void allowVideoMovement(bool b) { m_allowVideoMovement = b; };
+-    bool isVideoMovementAllowed() { return m_allowVideoMovement; };
++    void allowVideoMovement(bool b) { m_allowVideoMovement = b; }
++    bool isVideoMovementAllowed() { return m_allowVideoMovement; }
+ 
+-    void delayLeftClick(bool b) { m_delayLeftClick = b; };
+-    bool isLeftClickDelayed() { return m_delayLeftClick; };
++    void delayLeftClick(bool b) { m_delayLeftClick = b; }
++    bool isLeftClickDelayed() { return m_delayLeftClick; }
+ 
+     virtual QSize sizeHint () const;
+     virtual QSize minimumSizeHint() const;
+@@ -72,16 +72,16 @@ public:
+     bool isShowLogo(){return m_logoLabel->isVisible();}
+ 
+     void setCornerWidget(QWidget * w);
+-    QWidget * cornerWidget() { return m_cornerWidget; };
++    QWidget * cornerWidget() { return m_cornerWidget; }
+ 
+ 
+ public slots:
+     void setLogoVisible(bool b);
+-    void showLogo() { setLogoVisible(true);};
+-    void hideLogo() { setLogoVisible(false); };
++    void showLogo() { setLogoVisible(true);}
++    void hideLogo() { setLogoVisible(false); }
+     void hideLogoForTemporary();
+     void updateLogoPosition();
+-    void setAnimatedLogo(bool b) { m_animatedLogo = b; };
++    void setAnimatedLogo(bool b) { m_animatedLogo = b; }
+     void moveLeft();
+     void moveRight();
+     void moveUp();
